@@ -26,6 +26,7 @@
 #   elif !defined(__WXMOTIF__) && \
          !defined(__WXMSW__)   && \
          !defined(__WXGTK__)   && \
+         !defined(__WXOSX_CARBON__)   && \
          !defined(__WXOSX_COCOA__)   && \
          !defined(__WXOSX_IPHONE__)   && \
          !defined(__X__)       && \
@@ -340,9 +341,7 @@ typedef short int WXTYPE;
 #define wxConstCast(obj, className) wx_const_cast(className *, obj)
 
 #ifndef HAVE_STD_WSTRING
-    #if __cplusplus >= 201103L
-        #define HAVE_STD_WSTRING
-    #elif defined(__VISUALC__)
+    #if defined(__VISUALC__)
         #define HAVE_STD_WSTRING
     #elif defined(__MINGW32__)
         #define HAVE_STD_WSTRING
@@ -350,9 +349,7 @@ typedef short int WXTYPE;
 #endif
 
 #ifndef HAVE_STD_STRING_COMPARE
-    #if __cplusplus >= 201103L
-        #define HAVE_STD_STRING_COMPARE
-    #elif defined(__VISUALC__)
+    #if defined(__VISUALC__)
         #define HAVE_STD_STRING_COMPARE
     #elif defined(__MINGW32__) || defined(__CYGWIN32__)
         #define HAVE_STD_STRING_COMPARE
@@ -886,8 +883,10 @@ typedef short int WXTYPE;
 /*  where should i put this? we need to make sure of this as it breaks */
 /*  the <iostream> code. */
 #if !wxUSE_IOSTREAMH && defined(__WXDEBUG__)
+#    ifdef wxUSE_DEBUG_NEW_ALWAYS
 #    undef wxUSE_DEBUG_NEW_ALWAYS
 #    define wxUSE_DEBUG_NEW_ALWAYS 0
+#    endif
 #endif
 
 /*  ---------------------------------------------------------------------------- */
@@ -1845,9 +1844,10 @@ enum wxBorder
  * should be passed to wxWindow::SetExtraStyle(), not SetWindowStyle())
  */
 
-/* This flag is obsolete as recursive validation is now the default (and only
- * possible) behaviour. Simply don't use it any more in the new code. */
-#define wxWS_EX_VALIDATE_RECURSIVELY    0x00000000 /* used to be 1 */
+/*  by default, TransferDataTo/FromWindow() only work on direct children of the */
+/*  window (compatible behaviour), set this flag to make them recursively */
+/*  descend into all subwindows */
+#define wxWS_EX_VALIDATE_RECURSIVELY    0x00000001
 
 /*  wxCommandEvents and the objects of the derived classes are forwarded to the */
 /*  parent window and so on recursively by default. Using this flag for the */
@@ -2293,17 +2293,14 @@ enum wxStandardID
 };
 
 /*  ---------------------------------------------------------------------------- */
-/*  wxWindowID type                                                              */
+/*  wxWindowID type (after wxID_XYZ enum, platform detection, and dlimpexp.h)    */
 /*  ---------------------------------------------------------------------------- */
 
-/*
- * wxWindowID used to be just a typedef defined here, now it's a class, but we
- * still continue to define it here for compatibility, so that the code using
- * it continues to compile even if it includes just wx/defs.h.
- *
- * Notice that wx/windowid.h can only be included after wxID_XYZ definitions
- * (as it uses them).
- */
+/*  special care should be taken with this type under Windows where the real */
+/*  window id is unsigned, so we must always do the cast before comparing them */
+/*  (or else they would be always different!). Using wxGetWindowId() which does */
+/*  the cast itself is recommended. Note that this type can't be unsigned */
+/*  because wxID_ANY == -1 is a valid (and largely used) value for window id. */
 #if defined(__cplusplus) && wxUSE_GUI
     #include "wx/windowid.h"
 #endif
@@ -2654,7 +2651,7 @@ enum wxKeyCode
     WXK_COMMAND = WXK_CONTROL,
 
     /* Hardware-specific buttons */
-    WXK_SPECIAL1 = WXK_WINDOWS_MENU + 2, /* Skip WXK_RAW_CONTROL if necessary */
+    WXK_SPECIAL1 = 193,
     WXK_SPECIAL2,
     WXK_SPECIAL3,
     WXK_SPECIAL4,
@@ -2674,24 +2671,24 @@ enum wxKeyCode
     WXK_SPECIAL18,
     WXK_SPECIAL19,
     WXK_SPECIAL20,
-
-    WXK_BROWSER_BACK,
-    WXK_BROWSER_FORWARD,
-    WXK_BROWSER_REFRESH,
-    WXK_BROWSER_STOP,
-    WXK_BROWSER_SEARCH,
-    WXK_BROWSER_FAVORITES,
-    WXK_BROWSER_HOME,
-    WXK_VOLUME_MUTE,
-    WXK_VOLUME_DOWN,
-    WXK_VOLUME_UP,
-    WXK_MEDIA_NEXT_TRACK,
-    WXK_MEDIA_PREV_TRACK,
-    WXK_MEDIA_STOP,
-    WXK_MEDIA_PLAY_PAUSE,
-    WXK_LAUNCH_MAIL,
-    WXK_LAUNCH_APP1,
-    WXK_LAUNCH_APP2
+    
+    WXK_MM_BACK,
+    WXK_MM_FORWARD,
+    WXK_MM_CANCEL,
+    WXK_MM_RELOAD,
+    WXK_MM_HOMEPAGE,
+    WXK_MM_MAIL,
+    WXK_MM_EXPLORER,
+    WXK_MM_CALCULATOR,
+    WXK_MM_TOOLS,
+    WXK_MM_AUDIOMUTE,
+    WXK_MM_AUDIOPREV,
+    WXK_MM_AUDIOPLAY,
+    WXK_MM_AUDIONEXT,
+    WXK_MM_AUDIOSTOP,
+    WXK_MM_AUDIOLOWERVOLUME,
+    WXK_MM_AUDIORAISEVOLUME,
+    WXK_MM_SLEEP
 };
 
 /* This enum contains bit mask constants used in wxKeyEvent */
@@ -2717,7 +2714,7 @@ enum wxKeyModifier
 #define wxDLG_UNIT(parent, pt) parent->ConvertDialogToPixels(pt)
 
 /* Paper types */
-enum wxPaperSize
+typedef enum
 {
     wxPAPER_NONE,               /*  Use specific dimensions */
     wxPAPER_LETTER,             /*  Letter, 8 1/2 by 11 inches */
@@ -2840,7 +2837,7 @@ enum wxPaperSize
     wxPAPER_PENV_10_ROTATED,    /* PRC Envelope #10 Rotated 458 x 324 m */
     wxPAPER_A0,                 /* A0 Sheet 841 x 1189 mm */
     wxPAPER_A1                  /* A1 Sheet 594 x 841 mm */
-};
+} wxPaperSize;
 
 /* Printing orientation */
 enum wxPrintOrientation
@@ -2969,6 +2966,12 @@ typedef unsigned long   WXDWORD;
 typedef unsigned short  WXWORD;
 
 typedef WX_OPAQUE_TYPE(PicHandle ) * WXHMETAFILE ;
+#if wxOSX_USE_CARBON
+typedef struct OpaqueControlRef* WXWidget ;
+typedef struct OpaqueWindowPtr* WXWindow ;
+typedef struct __AGLPixelFormatRec   *WXGLPixelFormat;
+typedef struct __AGLContextRec       *WXGLContext;
+#endif
 
 typedef void*       WXDisplay;
 
@@ -3013,6 +3016,9 @@ DECLARE_WXMAC_OPAQUE_REF( MenuRef )
 
 typedef IconRef WXHICON ;
 typedef HIShapeRef WXHRGN;
+#if wxOSX_USE_CARBON
+typedef MenuRef WXHMENU;
+#endif
 
 #endif
 

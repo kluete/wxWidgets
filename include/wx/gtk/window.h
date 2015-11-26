@@ -198,6 +198,10 @@ public:
     bool GTKHandleFocusOut();
     void GTKHandleFocusOutNoDeferring();
     static void GTKHandleDeferredFocusOut();
+    
+    bool GTKIsRealized(void) const;
+    void GTKForceRealized(void);
+    void* GetXWindow() const;
 
     // Called when m_widget becomes realized. Derived classes must call the
     // base class method if they override it.
