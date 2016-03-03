@@ -782,31 +782,6 @@ static long wxTranslateKeySymToWXKey(KeySym keysym, bool isChar)
             break;
 #endif // GTK_CHECK_VERSION(2,18,0)
 
-        // multimedia keys
-	case GDK_KEY_Cancel:
-            key_code = int(WXK_MM_CANCEL);
-            break;
-	
-	case GDK_KEY_Reload:
-            key_code = int(WXK_MM_RELOAD);
-            break;
-	
-	case GDK_KEY_Explorer:
-            key_code = int(WXK_MM_EXPLORER);
-            break;
-	
-	case GDK_KEY_Calculator:
-            key_code = int(WXK_MM_CALCULATOR);
-            break;
-	
-	case GDK_KEY_Tools:
-            key_code = int(WXK_MM_TOOLS);		// (has music logo on some Dell keyboards)
-            break;
-	
-	case GDK_KEY_Sleep:
-            key_code = int(WXK_MM_SLEEP);
-            break;
-            
         default:
             key_code = 0;
     }
