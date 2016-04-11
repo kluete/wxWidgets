@@ -5261,22 +5261,6 @@ void wxWindowGTK::DoThaw()
         GTKThawWidget(m_wxwindow);
 }
 
-bool wxWindowGTK::GTKIsRealized(void) const
-{
-    if (!m_wxwindow)	return false;
-    
-    return gtk_widget_get_realized(m_wxwindow);
-}
-    
-void wxWindowGTK::GTKForceRealized(void)
-{
-	//if (m_parent)	m_parent->GTKForceRealized();
-	
-	if (m_wxwindow && ! gtk_widget_get_realized(m_wxwindow))
-		gtk_widget_realize(m_wxwindow);
-
-}
-
 void*	wxWindowGTK::GetXWindow() const
 {
 	GdkWindow	*window = GTKGetDrawingWindow();
